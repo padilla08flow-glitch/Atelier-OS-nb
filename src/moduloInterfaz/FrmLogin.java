@@ -5,7 +5,7 @@ import moduloConexion.Conexion;
 import moduloConexion.UsuarioDAO;
 /**
  *
- * @author Danna Paola
+ * @author Danna Padilla
  */
 public class FrmLogin extends JFrame{
     private JTextField txtUsuario;

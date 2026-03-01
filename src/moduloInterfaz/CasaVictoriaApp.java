@@ -3,7 +3,7 @@ import com.formdev.flatlaf.FlatLightLaf;
 
 /**
  *
- * @author Danna Paola
+ * @author Danna Padilla
  */
 public class CasaVictoriaApp {
     public static void main(String[] args) {
@@ -14,7 +14,6 @@ public class CasaVictoriaApp {
             System.err.println( "Error al iniciar FlatLaf" );
         }
 
-        // Ahora sí, abrir tu Login hecho por código
         java.awt.EventQueue.invokeLater(() -> {
             new FrmLogin().setVisible(true);
         });
