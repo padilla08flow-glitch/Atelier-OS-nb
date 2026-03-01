@@ -6,22 +6,28 @@ import javax.swing.JOptionPane;
 
 /**
  * Modulo encargado de conectar base de datos con el sistema
- * @author Danna Paola
+ * @author Danna Padilla
  */
 public class Conexion {
     private static Connection contacto = null;
     
-    private static final String user = "root"; //usuario con ALL PRIVILEGES
-    private static final String pass = "tu_password";
+    private static final String user = "vcv_user"; 
+    private static final String pass = "Vcv_2026_Access";
     private static final String db = "sistema_ventas";
-    private static final String url = "jdbc:mysql://localhost:3306/" + db;
+    private static final String url = "jdbc:mysql://localhost:3306/" + db + 
+            "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
     
     public static Connection getConexion(){
         try{
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            contacto = DriverManager.getConnection(url, user, pass);
+            if (contacto == null || contacto.isClosed()) {
+                Class.forName("com.mysql.cj.jdbc.Driver");
+                contacto = DriverManager.getConnection(url, user, pass);
+                System.out.println("Conexión exitosa a AtelierOS");
+            }
         }catch (ClassNotFoundException | SQLException e){
-            JOptionPane.showMessageDialog(null,"Error de conexion: " +e.getMessage());
+            JOptionPane.showMessageDialog(null, "Error crítico de conexión: " + e.getMessage(), 
+                                          "AtelierOS - Error", JOptionPane.ERROR_MESSAGE);
+            contacto = null;
         }
         return contacto;
     }
