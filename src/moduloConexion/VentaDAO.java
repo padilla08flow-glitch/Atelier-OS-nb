@@ -3,6 +3,7 @@ import java.sql.*;
 import java.util.List;
 import moduloLogica.Venta;
 import moduloLogica.VentaDetalle;
+import GestorProcesos.GestorVenta;
 
 /**
  *
@@ -58,10 +59,69 @@ public class VentaDAO {
             return true;
             
         } catch (SQLException e) {
-            if (con != null) try { con.rollback(); } catch (SQLException ex) {}
-            System.err.println("Error en transacción de venta: " + e.getMessage());
+            if (e.getMessage().contains("foreign key constraint fails")) {
+                System.err.println("ERROR: El ID del Cliente o Usuario no existe en la base de datos.");
+            } else {
+                System.err.println("Error de Transacción: " + e.getMessage());
+            }
             return false;
         }
+        
     }
+        
+    public boolean finalizarVenta(Venta venta, List<VentaDetalle> detalles) {
+        String sqlVenta = "INSERT INTO venta (id_cliente, id_usuario, total_venta, fecha_venta) VALUES (?, ?, ?, CURRENT_TIMESTAMP)";
+        String sqlDetalle = "INSERT INTO detalle_venta (id_venta, id_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)";
+        String sqlStock = "UPDATE producto SET stock = stock - ? WHERE id_producto = ? AND stock >= ?";
+        
+            try (Connection con = Conexion.getConexion()){
+                con.setAutoCommit(false); //transaccion segura
+                
+                int idVentaGenerado = -1;
+                
+                try (PreparedStatement psV = con.prepareStatement(sqlVenta, Statement.RETURN_GENERATED_KEYS)){
+                    psV.setInt(1, venta.getIdCliente());
+                    psV.setInt(2, venta.getIdUsuario());
+                    psV.setDouble(3, venta.getTotal());
+                    psV.executeUpdate();
+                    
+                    ResultSet rs = psV.getGeneratedKeys();
+                    if (rs.next()) idVentaGenerado = rs.getInt(1);   
+                }
+                
+                if (idVentaGenerado == -1) throw new SQLException("No se pudo obtener el ID de la venta.");
+                
+                //valida y actualiza el stock
+                for (VentaDetalle d : detalles) {
+                    try (PreparedStatement psS = con.prepareStatement(sqlStock)){
+                        psS.setInt(1, d.getCantidad());
+                        psS.setInt(2, d.getIdProducto());
+                        psS.setInt(3, d.getCantidad());
+                        
+                        int filasAfectadas = psS.executeUpdate();
+                        if (filasAfectadas == 0) {
+                            throw new SQLException("Stock insuficiente del producto: "+d.getIdProducto());
+                        }
+                    } 
+                    //registra detalle
+                    try (PreparedStatement psD = con.prepareStatement(sqlDetalle)) {
+                        psD.setInt(1, idVentaGenerado);
+                        psD.setInt(2, d.getIdProducto());
+                        psD.setInt(3, d.getCantidad());
+                        psD.setDouble(4, d.getPrecioUnitario());
+                        psD.executeUpdate();
+                    }
+                }
+                con.commit(); //guardar cambios
+                return true;
+                
+                    
+            } catch (SQLException e) {
+                System.err.println("Error de Transacción: " + e.getMessage());
+                return false;
+            }
+        }
+    
+    
     
 }

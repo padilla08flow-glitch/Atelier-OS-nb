@@ -65,11 +65,12 @@ public class ProductoDAO {
     //METODO-BUSQUEDA (NOMBRE / SKU)
     public List<Producto> buscar(String criterio) {
         List<Producto> lista = new ArrayList<>();
-        String sql = "SELECT p.*, d.nombre_modelo, d.material, d.tecnica, d.color " +
-                 "FROM producto p " +
-                 "INNER JOIN design d ON p.id_design = d.id_design " +
-                 "WHERE p.codigo_sku LIKE ? OR d.nombre_modelo LIKE ? " +
-                 "OR d.material LIKE ? OR d.tecnica LIKE ? OR d.color LIKE ?";
+        String sql = "SELECT p.id_producto, p.codigo_sku, p.talla, p.precio_venta, p.stock, " +
+            "d.nombre_modelo, d.material, d.tecnica, d.color " +
+            "FROM producto p " +
+            "INNER JOIN design d ON p.id_design = d.id_design " +
+            "WHERE p.codigo_sku LIKE ? OR d.nombre_modelo LIKE ? " +
+            "OR d.material LIKE ? OR d.tecnica LIKE ? OR d.color LIKE ?";
         
         try (Connection con = Conexion.getConexion();
             PreparedStatement ps = con.prepareStatement(sql)){
@@ -90,6 +91,12 @@ public class ProductoDAO {
                     p.setMaterial(rs.getString("material"));
                     p.setTecnica(rs.getString("tecnica"));
                     p.setColor(rs.getString("color"));
+
+                    // --- LÍNEAS DE DIAGNÓSTICO ---
+                    System.out.println("DEBUG DAO -> SKU: " + p.getSku());
+                    System.out.println("DEBUG DAO -> Precio Recuperado: " + p.getPrecio());
+                    System.out.println("DEBUG DAO -> Stock: " + p.getStock());
+                    // -----------------------------
                     lista.add(p);
                 }
             }
