@@ -3,7 +3,6 @@ import java.sql.*;
 import java.util.List;
 import moduloLogica.Venta;
 import moduloLogica.VentaDetalle;
-import GestorProcesos.GestorVenta;
 
 /**
  *
@@ -18,13 +17,12 @@ public class VentaDAO {
             con = Conexion.getConexion();
             con.setAutoCommit(false); //INICIAR TRANSACCION
             
-            String sqlVenta = "INSERT INTO venta (id_cliente, nombre_cliente, total_venta, metodo_pago, fecha_venta) VALUES (?,?,?,?, NOW())";
+            String sqlVenta = "INSERT INTO venta (id_cliente, nombre_cliente, total_venta, fecha_venta) VALUES (?,?,?,?, NOW())";
             
             PreparedStatement psVenta = con.prepareStatement(sqlVenta, Statement.RETURN_GENERATED_KEYS);
             psVenta.setInt(1, v.getIdCliente()); //id por defecto --> publico general
             psVenta.setString(2, v.getNombreCliente());
             psVenta.setDouble(3, v.getTotal());
-            psVenta.setString(4, v.getMetodoPago());
             psVenta.executeUpdate();
 
             //ID DE LA VENTA CREADA - obtener ID generado para los detalles
@@ -70,7 +68,7 @@ public class VentaDAO {
     }
         
     public boolean finalizarVenta(Venta venta, List<VentaDetalle> detalles) {
-        String sqlVenta = "INSERT INTO venta (id_cliente, id_usuario, total_venta, fecha_venta) VALUES (?, ?, ?, CURRENT_TIMESTAMP)";
+        String sqlVenta = "INSERT INTO venta (id_cliente, id_usuario, total_venta, nombre_cliente_ticket, fecha_venta) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)";
         String sqlDetalle = "INSERT INTO detalle_venta (id_venta, id_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)";
         String sqlStock = "UPDATE producto SET stock = stock - ? WHERE id_producto = ? AND stock >= ?";
         
@@ -83,6 +81,8 @@ public class VentaDAO {
                     psV.setInt(1, venta.getIdCliente());
                     psV.setInt(2, venta.getIdUsuario());
                     psV.setDouble(3, venta.getTotal());
+                    //para el ticket
+                    psV.setString(4, venta.getNombreCliente());
                     psV.executeUpdate();
                     
                     ResultSet rs = psV.getGeneratedKeys();
@@ -114,8 +114,7 @@ public class VentaDAO {
                 }
                 con.commit(); //guardar cambios
                 return true;
-                
-                    
+                  
             } catch (SQLException e) {
                 System.err.println("Error de Transacción: " + e.getMessage());
                 return false;

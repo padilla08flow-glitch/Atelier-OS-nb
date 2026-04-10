@@ -31,4 +31,14 @@ public class Conexion {
         }
         return contacto;
     }
+    
+    public void cerrar(Connection con) {
+        try {
+            if (con != null && !con.isClosed()) {
+                con.close();
+            }
+        } catch (SQLException e) {
+            System.err.println("Error al cerrar conexión: " + e.getMessage());
+        }
+    }
 }
